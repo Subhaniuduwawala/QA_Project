@@ -1,0 +1,17 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+@import "tailwindcss";
+/* Then your other CSS comes AFTER */
+.font-poppins {
+  font-family: 'Roboto', sans-serif;
+}
+
+
+
+
+
+
+
+
+
+
