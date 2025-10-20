@@ -64,7 +64,9 @@ jobs:
           echo "Cleaning frontend dependencies..."
           rm -rf node_modules package-lock.json
           echo "Installing frontend dependencies..."
-          npm install
+          npm install --legacy-peer-deps
+          echo "Installing platform-specific Rollup binary..."
+          npm install @rollup/rollup-linux-x64-gnu --save-optional
           npm rebuild
           echo "Frontend dependencies installed"
 
@@ -76,7 +78,6 @@ jobs:
           npm run build
         env:
           VITE_API_URL: http://localhost:5000
-          ROLLUP_SKIP_LOAD_NATIVE_MODULES: 'true'
 
       # Run Backend Tests
       - name: Run Backend Tests

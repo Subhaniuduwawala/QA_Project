@@ -22,7 +22,7 @@ try {
 
   if (installPackage) {
     console.log(`Installing platform-specific package: ${installPackage}`);
-    execSync(`npm install --save-dev ${installPackage}`, { stdio: 'inherit' });
+    execSync(`npm install --save-optional ${installPackage}`, { stdio: 'inherit' });
     console.log('Platform-specific installation completed successfully.');
   } else {
     console.log(`No specific Rollup package found for platform: ${platform} ${arch}`);
