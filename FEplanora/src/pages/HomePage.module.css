@@ -1,0 +1,235 @@
+/* --- HomePage.module.css (polished) --- */
+
+/* Optional fallbacks in case CSS variables aren’t defined globally */
+:root {
+  --color-background: #0f172a;          /* slate-900 */
+  --color-background-light: #f8fafc;    /* slate-50 */
+  --color-background-dark: #0b1220;     /* slightly darker bg */
+  --color-text: #334155;                /* slate-600 */
+  --color-text-light: #e2e8f0;          /* slate-200 */
+  --color-primary: #6366f1;             /* indigo-500 */
+  --color-primary-dark: #4f46e5;        /* indigo-600 */
+}
+
+/* Layout base */
+.pageContainer {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Utility container */
+.container {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding: 2rem;
+}
+
+/* ---------- Hero ---------- */
+.heroSection {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  padding: clamp(4rem, 8vw, 6.5rem) 2rem;
+  text-align: center;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate; /* keeps pseudo under content */
+}
+
+.heroSection::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image: url('../assets/pattern.png');
+  background-size: 600px 600px;
+  background-repeat: repeat;
+  background-position: center;
+  z-index: -1;
+}
+
+.heroTitle {
+  font-size: clamp(2.25rem, 5vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 1rem;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  color: #fff;
+}
+
+.heroSubtitle {
+  font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+  font-weight: 500;
+  margin: 0 0 1.5rem;
+  opacity: 0.95;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.heroDescription {
+  max-width: 48rem;
+  margin: 0 auto 2rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* Buttons – consistent styling & accessibility */
+.getStartedButton,
+.cardButton {
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
+  cursor: pointer;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+  will-change: transform;
+}
+
+/* Primary CTA */
+.getStartedButton {
+  background-color: #fff;
+  color: var(--color-primary);
+  padding: 1rem 1.5rem;
+  border: 2px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.getStartedButton:hover {
+  background-color: transparent;
+  color: #fff;
+  border-color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+}
+
+.getStartedButton:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14);
+}
+
+.getStartedButton:focus-visible,
+.cardButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.8), 0 0 0 6px rgba(79, 70, 229, 0.65);
+}
+
+/* Icon sizing */
+.arrowIcon {
+  inline-size: 20px;
+  block-size: 20px;
+  flex: 0 0 20px;
+}
+
+/* ---------- Features ---------- */
+.featuresSection {
+  padding: clamp(3rem, 6vw, 4.5rem) 0;
+  background-color: var(--color-background-light);
+}
+
+.eventsGrid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: clamp(1rem, 3vw, 2rem);
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+  padding-inline: 0.25rem;
+}
+
+/* Card */
+.eventCard {
+  grid-column: span 12;
+  background-color: #fff;
+  border-radius: 1rem;
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  text-align: center;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 200ms ease;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(2, 6, 23, 0.05);
+}
+
+@media (min-width: 640px) {
+  .eventCard { grid-column: span 6; }
+}
+@media (min-width: 1024px) {
+  .eventCard { grid-column: span 4; }
+}
+
+.eventCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.1);
+  border-color: rgba(2, 6, 23, 0.08);
+}
+
+.eventCard h3 {
+  font-size: clamp(1.125rem, 2.2vw, 1.5rem);
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: var(--color-primary);
+  letter-spacing: -0.01em;
+}
+
+.eventCard p {
+  color: var(--color-text);
+  margin: 0 0 1.25rem;
+  line-height: 1.7;
+}
+
+/* Secondary button on cards */
+.cardButton {
+  background-color: transparent;
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  padding: 0.75rem 1.25rem;
+}
+
+.cardButton:hover {
+  background-color: var(--color-primary);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  margin-top: auto;
+  text-align: center;
+  padding: 2rem;
+  background-color: var(--color-background-dark);
+  color: var(--color-text-light);
+  border-top: 1px solid rgba(226, 232, 240, 0.08);
+}
+
+/* ---------- Responsiveness ---------- */
+@media (max-width: 768px) {
+  .eventsGrid {
+    padding-inline: 0.5rem;
+  }
+}
+
+/* ---------- Motion & Contrast preferences ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .getStartedButton,
+  .cardButton,
+  .eventCard {
+    transition: none;
+  }
+  .eventCard:hover,
+  .getStartedButton:hover,
+  .cardButton:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .getStartedButton,
+  .cardButton {
+    border-width: 2px;
+  }
+  .getStartedButton:focus-visible,
+  .cardButton:focus-visible {
+    box-shadow: 0 0 0 3px #fff, 0 0 0 7px #000;
+  }
+}

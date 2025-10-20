@@ -1,0 +1,121 @@
+.authContainer {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%);
+}
+
+.mainContent {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.formCard {
+  width: 100%;
+  max-width: 28rem;
+  background-color: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.formTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+}
+
+.errorMessage {
+  color: var(--color-error);
+  text-align: center;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: var(--color-error-light);
+  border-radius: 0.5rem;
+}
+
+.formGroup {
+  margin-bottom: 1.25rem;
+}
+
+.label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--color-text);
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--color-border);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.input::placeholder {
+  color: var(--color-text-light);
+}
+
+.submitButton {
+  width: 100%;
+  padding: 0.875rem;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.submitButton:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.submitButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.formFooter {
+  margin-top: 1.5rem;
+  text-align: center;
+  color: red;
+  font-size: 0.875rem;
+}
+
+.formFooterLink {
+  color: var(--color-primary);
+  font-weight: 500;
+  text-decoration: none;
+  margin-left: 0.25rem;
+  transition: color 0.2s ease;
+}
+
+.formFooterLink:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .formCard {
+    padding: 1.5rem;
+  }
+
+  .formTitle {
+    font-size: 1.75rem;
+  }
+}

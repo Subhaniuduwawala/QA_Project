@@ -8,11 +8,7 @@ describe('Create Event Modal', () => {
   let driver;
 
   beforeAll(async () => {
-    const service = new chrome.ServiceBuilder(chromedriver.path);
-    driver = await new Builder()
-      .forBrowser('chrome')
-      .setChromeService(service)
-      .build();
+    driver = await new Builder().forBrowser('chrome').build();
   });
 
   afterAll(async () => {
