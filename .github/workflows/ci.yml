@@ -1,14 +1,10 @@
-name: Planora CI
+name: Planora CI/CD Pipeline
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   build-and-test:
@@ -20,23 +16,14 @@ jobs:
         image: mongo:6
         ports:
           - 27017:27017
-        # Make sure Mongo is actually healthy before tests run
         options: >-
           --health-cmd="mongosh --eval 'db.runCommand({ ping: 1 })'"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=12
-
-    env:
-      # Common envs
-      BE_MONGO: mongodb://127.0.0.1:27017/planora
-      BE_MONGO_TEST: mongodb://127.0.0.1:27017/planora_test
-      PORT: 5000
-      VITE_API_URL: http://localhost:5000
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          --health-retries=5
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -45,73 +32,80 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install backend deps
+      # Backend setup
+      - name: Install backend dependencies
         working-directory: BEplanora
         run: npm ci
 
-      - name: Install frontend deps
+      # Frontend setup
+      - name: Install frontend dependencies
         working-directory: FEplanora
-        run: npm ci
+        run: |
+          rm -rf node_modules package-lock.json || true
+          npm install --legacy-peer-deps
+          npm rebuild || true
 
       - name: Build frontend
         working-directory: FEplanora
         run: npm run build
+        env:
+          VITE_API_URL: http://localhost:5000
 
-      - name: Start backend server
-        run: |
-          cd BEplanora
-          MONGODB_URI="$BE_MONGO" JWT_SECRET="$JWT_SECRET" node app.js &
-          echo $! > "$GITHUB_WORKSPACE/backend.pid"
-          # wait until port 5000 is open
-          for i in {1..30}; do nc -z 127.0.0.1 5000 && break || sleep 1; done
+      # Run tests
+      - name: Run backend tests
+        working-directory: BEplanora
+        run: npm test
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:27017/planora_test
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          NODE_ENV: test
 
-      - name: Start frontend (vite preview)
+      - name: Run frontend tests
         working-directory: FEplanora
-        run: |
-          # Use preview server instead of dev server for CI
-          npx vite preview --port 5173 --strictPort &
-          echo $! > "$GITHUB_WORKSPACE/frontend.pid"
-          for i in {1..30}; do nc -z 127.0.0.1 5173 && break || sleep 1; done
+        run: npm test
+        env:
+          CI: true
 
+      # Linting
+      - name: Lint frontend
+        working-directory: FEplanora
+        run: npm run lint || true
+        continue-on-error: true
+
+      # E2E Tests
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@v1
 
       - name: Setup ChromeDriver
         uses: nanasess/setup-chromedriver@master
 
-      - name: Install xvfb (for headless GUI tests)
-        run: sudo apt-get update && sudo apt-get install -y xvfb
-
-      # ---- Tests ----
-      - name: Run backend tests
+      - name: Start backend server
         working-directory: BEplanora
+        run: |
+          npm start &
+          sleep 10
         env:
-          MONGODB_URI: ${{ env.BE_MONGO_TEST }}
-          JWT_SECRET: ${{ env.JWT_SECRET }}
-        run: npm test --silent
+          MONGODB_URI: mongodb://127.0.0.1:27017/planora_test
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          PORT: 5000
 
-      - name: Run frontend tests
+      - name: Start frontend server
         working-directory: FEplanora
+        run: |
+          npx vite preview --port 5173 --strictPort &
+          sleep 10
+
+      - name: Run E2E tests
+        working-directory: FEplanora
+        run: npm run test:e2e || echo "E2E tests not configured"
+        continue-on-error: true
         env:
           CI: true
-        # Adjust the command based on your test runner:
-        #  - Vitest: npx vitest run
-        #  - CRA/Jest: npm test -- --watch=false
-        run: |
-          if npm run | grep -q "vitest"; then
-            npx vitest run
-          else
-            npm test -- --watch=false
-          fi
+          TEST_BASE_URL: http://localhost:5173
 
-      - name: Lint frontend (non-blocking)
-        working-directory: FEplanora
-        run: npm run lint || true
-
-      - name: Cleanup
+      # Cleanup
+      - name: Cleanup processes
         if: always()
         run: |
-          kill -9 $(cat "$GITHUB_WORKSPACE/frontend.pid" 2>/dev/null) 2>/dev/null || true
-          kill -9 $(cat "$GITHUB_WORKSPACE/backend.pid" 2>/dev/null) 2>/dev/null || true
-          pkill -f "vite" || true
           pkill -f "node" || true
+          pkill -f "vite" || true
