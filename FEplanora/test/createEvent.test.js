@@ -16,11 +16,25 @@ describe('Create Event Modal', () => {
   });
 
   test('should create event when all fields are filled', async () => {
-    await driver.get('http://localhost:5173/admin/events');
+    // First, login as admin
+    await driver.get('http://localhost:5174/admin/login');
+
+    // Wait for login form
+    await driver.wait(until.elementLocated(By.css('input[name="email"]')), 5000);
+
+    // Fill login form
+    await driver.findElement(By.css('input[name="email"]')).sendKeys('admin@example.com');
+    await driver.findElement(By.css('input[name="password"]')).sendKeys('password123');
+
+    // Submit login
+    await driver.findElement(By.css('button[type="submit"]')).click();
+
+    // Wait for redirect to events dashboard
+    await driver.wait(until.urlContains('/admin/events'), 10000);
 
     // Step 1: Wait for the page to load
     await driver.wait(until.elementLocated(By.css('button[data-testid="create-event-button"]')), 5000);
-    
+
     // Step 2: Click the button that opens the modal
     await driver.findElement(By.css('button[data-testid="create-event-button"]')).click();
 
