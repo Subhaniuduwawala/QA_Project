@@ -1,0 +1,347 @@
+{
+	"info": {
+		"_postman_id": "owasp-security-testing-collection",
+		"name": "OWASP Security Testing - Planora API (Before/After Evidence)",
+		"description": "Postman collection demonstrating OWASP Top 10 security fixes. Run these tests to capture screenshots showing vulnerabilities fixed.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🚨 BEFORE FIXES - VULNERABLE ENDPOINTS",
+			"item": [
+				{
+					"name": "1. NoSQL Injection Attack (BEFORE)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\":{\"$ne\":null},\"password\":\"anything\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "login"]
+						},
+						"description": "BEFORE FIX: This would allow NoSQL injection attack. AFTER FIX: Should be blocked by input validation."
+					}
+				},
+				{
+					"name": "2. Brute Force Login (BEFORE)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\":\"attacker@test.com\",\"password\":\"wrongpassword\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "login"]
+						},
+						"description": "BEFORE FIX: No rate limiting. AFTER FIX: Blocked after 5 attempts."
+					}
+				},
+				{
+					"name": "3. Unauthorized Write Access (BEFORE)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"title\":\"Hacked Event\",\"description\":\"This should not be allowed\",\"date\":\"2025-01-01\",\"location\":\"Hacker Location\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/events",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "events"]
+						},
+						"description": "BEFORE FIX: Anyone could create events. AFTER FIX: Requires authentication."
+					}
+				},
+				{
+					"name": "4. Weak Password Signup (BEFORE)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\":\"weak@test.com\",\"password\":\"123\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/signup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "signup"]
+						},
+						"description": "BEFORE FIX: Any password accepted. AFTER FIX: Password validation enforced."
+					}
+				},
+				{
+					"name": "5. Information Disclosure (BEFORE)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/nonexistent-endpoint",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "nonexistent-endpoint"]
+						},
+						"description": "BEFORE FIX: Stack traces leaked. AFTER FIX: Safe error messages only."
+					}
+				}
+			]
+		},
+		{
+			"name": "✅ AFTER FIXES - SECURE ENDPOINTS",
+			"item": [
+				{
+					"name": "1. NoSQL Injection Prevention (AFTER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\":{\"$ne\":null},\"password\":\"anything\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "login"]
+						},
+						"description": "AFTER FIX: Input validation blocks NoSQL injection. Should return 'Attack Blocked!'"
+					}
+				},
+				{
+					"name": "2. Rate Limiting Protection (AFTER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\":\"test@test.com\",\"password\":\"wrongpassword\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "login"]
+						},
+						"description": "AFTER FIX: Rate limiting blocks brute force. Run 6+ times to see 429 error."
+					}
+				},
+				{
+					"name": "3. Public Read Access (AFTER)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/events",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "events"]
+						},
+						"description": "AFTER FIX: Public read access works without authentication. Should return 200 OK."
+					}
+				},
+				{
+					"name": "4. Authentication Required for Writes (AFTER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"title\":\"Secure Event\",\"description\":\"This requires auth\",\"date\":\"2025-01-01\",\"location\":\"Secure Location\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/events",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "events"]
+						},
+						"description": "AFTER FIX: Write operations require JWT token. Should return 401 Unauthorized."
+					}
+				},
+				{
+					"name": "5. Password Validation (AFTER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\":\"secure@test.com\",\"password\":\"weak\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/signup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "signup"]
+						},
+						"description": "AFTER FIX: Password validation enforced. Should return 400 Bad Request."
+					}
+				},
+				{
+					"name": "6. Safe Error Handling (AFTER)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/invalid-endpoint",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "invalid-endpoint"]
+						},
+						"description": "AFTER FIX: Safe error handling. Should return 404 without stack traces."
+					}
+				},
+				{
+					"name": "7. Successful Admin Signup (AFTER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\":\"admin@test.com\",\"password\":\"SecurePass123!\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/signup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "signup"]
+						},
+						"description": "AFTER FIX: Strong password accepted. Should return 201 Created with JWT token."
+					}
+				},
+				{
+					"name": "8. Successful Admin Login (AFTER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\":\"admin@test.com\",\"password\":\"SecurePass123!\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "login"]
+						},
+						"description": "AFTER FIX: Secure login with JWT. Should return 200 OK with token. Save token for authenticated requests."
+					}
+				},
+				{
+					"name": "9. Authenticated Event Creation (AFTER)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"description": "Replace {{authToken}} with token from login response"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"title\":\"Authenticated Event\",\"description\":\"Created with valid JWT\",\"date\":\"2025-01-01\",\"location\":\"Secure Location\"}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/events",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "events"]
+						},
+						"description": "AFTER FIX: Authenticated event creation. Should return 201 Created."
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string",
+			"description": "Set this to the JWT token from successful login"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-save auth token from login response",
+					"if (pm.response.code === 200 && pm.request.url.path.includes('login')) {",
+					"    const responseJson = pm.response.json();",
+					"    if (responseJson.token) {",
+					"        pm.collectionVariables.set('authToken', responseJson.token);",
+					"        console.log('Auth token saved:', responseJson.token.substring(0, 20) + '...');",
+					"    }",
+					"}"
+				]
+			}
+		}
+	]
+}</content>
+<parameter name="filePath">C:\Users\Asus\Documents\Project\QA project\OWASP-Security-Testing-Postman-Collection.json
