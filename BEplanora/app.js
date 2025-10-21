@@ -45,6 +45,10 @@ import connectDB from "./Config/db.js";
 import eventsRoute from "./routes/events.js";
 import adminRoute from "./routes/admin.js";
 
+// Import middleware
+import { errorHandler, notFound } from "./middleware/errorHandler.js";
+import { apiLimiter } from "./middleware/rateLimiter.js";
+
 const app = express();
 
 // Connect to MongoDB
@@ -57,6 +61,9 @@ connectDB().catch(err => {
 app.use(cors());
 app.use(express.json());
 
+// Apply rate limiter to all API routes
+app.use("/api", apiLimiter);
+
 // Routes
 app.use("/api/events", eventsRoute);
 app.use("/api/admin", adminRoute);
@@ -65,6 +72,10 @@ app.use("/api/admin", adminRoute);
 app.get("/", (req, res) => {
   res.send("University Event Management API is running");
 });
+
+// Error handling middleware (must be AFTER routes)
+app.use(notFound);
+app.use(errorHandler);
 
 // ✅ Start server with .env PORT
 const PORT = process.env.PORT || 5000;

@@ -4,9 +4,11 @@ import request from "supertest";
 import { expect } from "chai";
 import app from "../app.js";
 import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
 
 describe("Event API", function () {
   let eventId;
+  let token;
 
  before(async function () {
   // Connect to your main database
@@ -16,6 +18,13 @@ describe("Event API", function () {
 
   // Optional: clear only the events collection
   await mongoose.connection.collection("events").deleteMany({});
+
+  // Create a test token for authentication
+  token = jwt.sign(
+    { _id: "test-user-123", email: "test@test.com" },
+    process.env.JWT_SECRET || "your_super_secret_jwt_key_change_this_in_production_12345",
+    { expiresIn: "1h" }
+  );
 });
 
 after(async function () {
@@ -25,6 +34,7 @@ after(async function () {
   it("should create a new event", async function () {
     const res = await request(app)
       .post("/api/events")
+      .set("Authorization", `Bearer ${token}`)
       .send({
         name: "Test Event",
         location: "Test Hall",

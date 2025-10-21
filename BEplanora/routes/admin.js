@@ -1,16 +1,59 @@
 // routes/admin.js
 import express from "express";
-import { signupAdmin, loginAdmin } from "../controllers/adminController.js"; // note .js extension
+import { body } from "express-validator";
+import { signupAdmin, loginAdmin } from "../controllers/adminController.js";
+import { loginLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
-// ✅ Admin signup
-router.post("/signup", signupAdmin);
+// ✅ Admin signup with validation
+router.post(
+  "/signup",
+  [
+    body("email")
+      .trim()
+      .isEmail()
+      .normalizeEmail()
+      .withMessage("Valid email is required"),
+    body("password")
+      .isLength({ min: 8 })
+      .withMessage("Password must be at least 8 characters")
+      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)
+      .withMessage("Password must contain uppercase, lowercase, number, and special character"),
+    body("firstName")
+      .trim()
+      .isString()
+      .notEmpty()
+      .escape()
+      .withMessage("First name is required"),
+    body("lastName")
+      .trim()
+      .isString()
+      .notEmpty()
+      .escape()
+      .withMessage("Last name is required"),
+  ],
+  signupAdmin
+);
 
-// ✅ Admin login
-router.post("/login", loginAdmin);
+// ✅ Admin login with validation and rate limiting
+router.post(
+  "/login",
+  loginLimiter, // Prevent brute force attacks
+  [
+    body("email")
+      .trim()
+      .isEmail()
+      .normalizeEmail()
+      .withMessage("Valid email is required"),
+    body("password")
+      .isString()
+      .notEmpty()
+      .withMessage("Password is required"),
+  ],
+  loginAdmin
+);
 
-// Export default for ES modules
 export default router;
 
 
