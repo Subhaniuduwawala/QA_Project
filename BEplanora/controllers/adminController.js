@@ -4,9 +4,7 @@ import jwt from "jsonwebtoken";
 import { validationResult } from "express-validator";
 import Admin from "../models/Admin.js";
 
-// @desc    Signup a new admin
-// @route   POST /api/admin/signup
-// @access  Public
+
 export const signupAdmin = async (req, res, next) => {
   try {
     // Check validation results

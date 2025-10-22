@@ -1,4 +1,4 @@
-// routes/admin.js
+﻿// routes/admin.js
 import express from "express";
 import { body } from "express-validator";
 import { signupAdmin, loginAdmin } from "../controllers/adminController.js";
@@ -6,7 +6,7 @@ import { loginLimiter } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
-// ✅ Admin signup with validation
+// Admin signup with validation
 router.post(
   "/signup",
   [
@@ -36,18 +36,21 @@ router.post(
   signupAdmin
 );
 
-// ✅ Admin login with validation and rate limiting
+// Admin login with validation and rate limiting
 router.post(
   "/login",
-  loginLimiter, // Prevent brute force attacks
+  loginLimiter,
   [
     body("email")
+      .isString()
+      .withMessage("Email must be a string")
       .trim()
       .isEmail()
       .normalizeEmail()
       .withMessage("Valid email is required"),
     body("password")
       .isString()
+      .withMessage("Password must be a string")
       .notEmpty()
       .withMessage("Password is required"),
   ],
@@ -55,5 +58,3 @@ router.post(
 );
 
 export default router;
-
-

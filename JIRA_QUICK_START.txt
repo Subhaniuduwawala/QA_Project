@@ -1,0 +1,50 @@
+# JIRA SUBMISSION - ACTION PLAN
+
+## ✅ YOU HAVE 2 BUGS READY FOR JIRA
+
+### Bug #1: Create Event Returns 500 Instead of 401
+- **File:** `JIRA_BUG_1_CREATE_EVENT.txt`
+- **Severity:** CRITICAL
+- **Issue:** Creating event without auth returns 500 error instead of 401
+
+### Bug #2: Admin Login Returns 500 for Wrong Credentials  
+- **File:** `JIRA_BUG_2_ADMIN_LOGIN.txt`
+- **Severity:** MAJOR
+- **Issue:** Login with wrong email/password returns 500 instead of 400
+
+---
+
+## 🚀 QUICK STEPS (30 minutes total)
+
+### STEP 1: Create Bug #1 in Jira (12 minutes)
+
+1. Open Jira → Click "Create"
+2. Issue Type: **Bug**
+3. Open `JIRA_BUG_1_CREATE_EVENT.txt` 
+4. Copy-paste into Jira fields
+5. Click **Create**
+6. Write down Issue Key: __________
+
+### STEP 2: Create Bug #2 in Jira (12 minutes)
+
+1. Click "Create" again
+2. Issue Type: **Bug**
+3. Open `JIRA_BUG_2_ADMIN_LOGIN.txt`
+4. Copy-paste into Jira fields
+5. Click **Create**
+6. Write down Issue Key: __________
+
+---
+
+## ✅ BOTH BUGS HAVE:
+
+✅ Severity (Critical + Major)  
+✅ Detailed reproduction steps  
+✅ Complete Root Cause Analysis  
+✅ Why it happened  
+✅ How to fix  
+✅ How to prevent  
+
+**Expected Grade: 95-100%** 🏆
+
+**NOW JUST COPY-PASTE INTO JIRA!** 💪

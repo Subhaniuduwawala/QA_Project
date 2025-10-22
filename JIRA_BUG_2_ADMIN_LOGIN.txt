@@ -1,0 +1,223 @@
+# COPY THIS INTO JIRA - BUG #2
+
+===========================================
+SUMMARY:
+===========================================
+Admin Login Returns 500 Error for Invalid Credentials Instead of 400
+
+===========================================
+PRIORITY: High
+SEVERITY: Major
+COMPONENT: Backend API, Authentication
+LABELS: authentication, login, error-handling, api, major-bug
+===========================================
+
+===========================================
+DESCRIPTION:
+===========================================
+When admin attempts to login with invalid credentials (wrong email or password), the API returns a 500 Internal Server Error instead of the expected 400 Bad Request status code.
+
+CURRENT BEHAVIOR:
+• Status Code: 500 Internal Server Error
+• Response: Generic error message
+• Doesn't clearly indicate that credentials are wrong
+
+EXPECTED BEHAVIOR:
+• Status Code: 400 Bad Request (or 401 Unauthorized)
+• Response: {"success":false,"message":"Invalid credentials"}
+• Clear indication that login failed due to wrong credentials
+
+IMPACT:
+• Poor user experience - generic errors confuse users
+• Frontend cannot properly handle login failures
+• Makes debugging difficult
+• May expose internal server details
+• Violates REST API conventions
+• Security concern: different errors for wrong email vs wrong password could enable user enumeration
+
+===========================================
+ENVIRONMENT:
+===========================================
+• Application: Planora Event Management System (Backend)
+• Component: Admin Login API
+• Endpoint: POST /api/admin/login
+• Database: MongoDB Atlas
+• Framework: Express.js v5.1.0
+• Authentication: JWT + bcrypt
+
+===========================================
+STEPS TO REPRODUCE:
+===========================================
+PREREQUISITES:
+1. Backend server running on http://localhost:5000
+2. Postman or PowerShell available
+3. Know that certain email doesn't exist in database
+
+STEPS:
+1. Start backend server: npm start
+
+2. Attempt login with WRONG EMAIL:
+   
+   PowerShell:
+   Invoke-WebRequest -Uri "http://localhost:5000/api/admin/login" `
+     -Method POST -ContentType "application/json" `
+     -Body '{"email":"wrong@email.com","password":"Password123!"}'
+
+   Postman:
+   POST http://localhost:5000/api/admin/login
+   Body: {
+     "email": "wrong@email.com",
+     "password": "Password123!"
+   }
+
+3. Attempt login with WRONG PASSWORD:
+   
+   Body: {
+     "email": "existing@email.com",
+     "password": "WrongPassword123!"
+   }
+
+4. Observe the response
+
+ACTUAL RESULT:
+✗ Status: 500 Internal Server Error
+✗ Response: Generic error message
+✗ Same error for wrong email and wrong password
+
+EXPECTED RESULT:
+✓ Status: 400 Bad Request (or 401 Unauthorized)
+✓ Response: {"success":false,"message":"Invalid credentials"}
+✓ Consistent error message for both wrong email and wrong password (security best practice)
+
+===========================================
+ROOT CAUSE ANALYSIS:
+===========================================
+
+WHY IT HAPPENED:
+1. Error Handling Gap
+   • Login controller doesn't properly catch database or bcrypt errors
+   • When admin not found or password comparison fails, error is thrown
+   • Error falls through to global error handler which returns 500
+
+2. Validation Issues
+   • express-validator might be failing on certain inputs
+   • Validation errors not properly caught and converted to 400 status
+
+3. Missing Try-Catch or Improper Error Response
+   • Controller might be using next(error) which goes to global handler
+   • Should return explicit 400/401 response for failed login
+
+CODE FLOW:
+Request: POST /api/admin/login {wrong credentials}
+  ↓
+Validation passes (email format correct)
+  ↓
+Controller tries to find admin in database
+  ↓
+Admin not found OR password doesn't match
+  ↓
+Error thrown or improper error handling
+  ↓
+Global error handler catches → 500 status
+  ↓
+Generic error returned
+
+HOW IT WAS FIXED:
+Updated login controller to properly handle failed authentication:
+
+File: BEplanora/controllers/adminController.js
+
+export const loginAdmin = async (req, res, next) => {
+  try {
+    // Check validation results
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false, 
+        errors: errors.array() 
+      });
+    }
+
+    const { email, password } = req.body;
+
+    // Find admin
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      // ✅ Return 400 for wrong email (not 500)
+      return res.status(400).json({ 
+        success: false,
+        message: "Invalid credentials"  // Don't reveal if email exists
+      });
+    }
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
+      // ✅ Return 400 for wrong password (not 500)
+      return res.status(400).json({ 
+        success: false,
+        message: "Invalid credentials"  // Same message as wrong email
+      });
+    }
+
+    // Generate token and return success
+    const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    res.json({
+      success: true,
+      token,
+      // ... admin details
+    });
+
+  } catch (error) {
+    // ✅ Only genuine server errors reach here
+    next(error);
+  }
+};
+
+KEY CHANGES:
+1. Explicit return statements with 400 status for invalid credentials
+2. Same error message for wrong email and wrong password (security)
+3. Only actual server errors (DB connection, etc.) return 500
+4. Proper try-catch block structure
+
+HOW TO PREVENT SIMILAR BUGS:
+1. Always return explicit status codes (400/401) for authentication failures
+2. Never let auth failures fall through to global error handler
+3. Use consistent error messages to prevent user enumeration
+4. Test all failure scenarios (wrong email, wrong password, missing fields)
+5. Add automated tests for login failure cases
+6. Document expected status codes and error messages
+7. Use try-catch properly in async controllers
+
+TESTING ADDED:
+describe('Admin Login - Error Handling', () => {
+  it('should return 400 for non-existent email', async () => {
+    const res = await request(app)
+      .post('/api/admin/login')
+      .send({
+        email: 'nonexistent@email.com',
+        password: 'Password123!'
+      });
+    
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe('Invalid credentials');
+  });
+
+  it('should return 400 for wrong password', async () => {
+    const res = await request(app)
+      .post('/api/admin/login')
+      .send({
+        email: 'existing@email.com',
+        password: 'WrongPassword123!'
+      });
+    
+    expect(res.status).toBe(400);
+    expect(res.body.message).toBe('Invalid credentials');
+  });
+});
+
+===========================================

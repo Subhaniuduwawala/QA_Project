@@ -48,6 +48,7 @@ import adminRoute from "./routes/admin.js";
 // Import middleware
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
+import mongoSanitize from "express-mongo-sanitize";
 
 const app = express();
 
@@ -60,6 +61,10 @@ connectDB().catch(err => {
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// ✅ Data sanitization against NoSQL query injection
+// Removes MongoDB operators ($gt, $ne, $regex, etc.) from req.body, req.query, req.params
+app.use(mongoSanitize());
 
 // Apply rate limiter to all API routes
 app.use("/api", apiLimiter);

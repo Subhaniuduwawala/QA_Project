@@ -3,6 +3,10 @@ import { app } from '../app.js';
 import mongoose from 'mongoose';
 import { Admin } from '../models/Admin.js';
 import { Event } from '../models/Event.js';
+import dotenv from 'dotenv';
+
+// Load environment variables for tests
+dotenv.config();
 
 describe('API Tests', () => {
   beforeAll(async () => {
@@ -26,11 +30,11 @@ describe('API Tests', () => {
   describe('POST /api/admin/signup', () => {
     it('should create a new admin with valid data', async () => {
       const adminData = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        password: 'Password123!',
-        confirmPassword: 'Password123!'
+        firstName: process.env.TEST_ADMIN_FIRSTNAME,
+        lastName: process.env.TEST_ADMIN_LASTNAME,
+        email: process.env.TEST_ADMIN_EMAIL,
+        password: process.env.TEST_ADMIN_PASSWORD,
+        confirmPassword: process.env.TEST_ADMIN_PASSWORD
       };
 
       const response = await request(app)
@@ -47,11 +51,11 @@ describe('API Tests', () => {
 
     it('should return error for duplicate email', async () => {
       const adminData = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        password: 'Password123!',
-        confirmPassword: 'Password123!'
+        firstName: process.env.TEST_ADMIN_FIRSTNAME,
+        lastName: process.env.TEST_ADMIN_LASTNAME,
+        email: process.env.TEST_ADMIN_EMAIL,
+        password: process.env.TEST_ADMIN_PASSWORD,
+        confirmPassword: process.env.TEST_ADMIN_PASSWORD
       };
 
       // First signup
@@ -77,11 +81,11 @@ describe('API Tests', () => {
     beforeEach(async () => {
       // Create an admin and get token
       const adminData = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        password: 'Password123!',
-        confirmPassword: 'Password123!'
+        firstName: process.env.TEST_ADMIN_FIRSTNAME,
+        lastName: process.env.TEST_ADMIN_LASTNAME,
+        email: process.env.TEST_ADMIN_EMAIL,
+        password: process.env.TEST_ADMIN_PASSWORD,
+        confirmPassword: process.env.TEST_ADMIN_PASSWORD
       };
 
       const signupResponse = await request(app)
@@ -91,8 +95,8 @@ describe('API Tests', () => {
       const loginResponse = await request(app)
         .post('/api/admin/login')
         .send({
-          email: adminData.email,
-          password: adminData.password
+          email: process.env.TEST_ADMIN_EMAIL,
+          password: process.env.TEST_ADMIN_PASSWORD
         });
 
       adminToken = loginResponse.body.token;

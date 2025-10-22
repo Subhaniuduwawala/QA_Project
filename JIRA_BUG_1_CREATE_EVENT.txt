@@ -1,0 +1,176 @@
+# COPY THIS INTO JIRA - BUG #1
+
+===========================================
+SUMMARY:
+===========================================
+Create Event API Returns 500 Error Instead of 401 for Unauthorized Access
+
+===========================================
+PRIORITY: High
+SEVERITY: Critical
+COMPONENT: Backend API, Events
+LABELS: api, events, authentication, error-handling, critical-bug
+===========================================
+
+===========================================
+DESCRIPTION:
+===========================================
+When attempting to create an event without proper JWT authentication or with an invalid token, the API returns a 500 Internal Server Error instead of the expected 401 Unauthorized status code.
+
+CURRENT BEHAVIOR:
+• Status Code: 500 Internal Server Error
+• Response: {"success":false,"message":"An error occurred while processing your request"}
+• Generic error message that doesn't indicate authentication issue
+
+EXPECTED BEHAVIOR:
+• Status Code: 401 Unauthorized
+• Response: {"success":false,"message":"Not authorized, no token"} or similar
+• Clear indication that authentication is required
+
+SECURITY IMPACT:
+• Exposes internal server errors instead of proper auth errors
+• Makes debugging difficult for frontend developers
+• Violates REST API best practices
+• May expose stack traces in development mode
+• Incorrect HTTP status codes confuse API consumers
+
+===========================================
+ENVIRONMENT:
+===========================================
+• Application: Planora Event Management System (Backend)
+• Component: Events API
+• Endpoint: POST /api/events
+• Database: MongoDB Atlas
+• Framework: Express.js v5.1.0
+• Authentication: JWT Bearer Token
+
+===========================================
+STEPS TO REPRODUCE:
+===========================================
+PREREQUISITES:
+1. Backend server running on http://localhost:5000
+2. Postman or PowerShell available
+
+STEPS:
+1. Start backend server: npm start
+
+2. Attempt to create event WITHOUT authentication:
+   
+   PowerShell:
+   $headers = @{"Content-Type" = "application/json"}
+   Invoke-WebRequest -Uri "http://localhost:5000/api/events" `
+     -Method POST -Headers $headers `
+     -Body '{"title":"Test Event","description":"Test","date":"2025-12-01","time":"10:00","location":"Hall","category":"Academic"}'
+
+   Postman:
+   POST http://localhost:5000/api/events
+   Headers: Content-Type: application/json
+   Body: {
+     "title": "Test Event",
+     "description": "Test Description",
+     "date": "2025-12-01",
+     "time": "10:00",
+     "location": "Main Hall",
+     "category": "Academic"
+   }
+
+3. Observe the response
+
+ACTUAL RESULT:
+✗ Status: 500 Internal Server Error
+✗ Response: {"success":false,"message":"An error occurred while processing your request"}
+
+EXPECTED RESULT:
+✓ Status: 401 Unauthorized
+✓ Response: {"success":false,"message":"Not authorized, no token"}
+
+===========================================
+ROOT CAUSE ANALYSIS:
+===========================================
+
+WHY IT HAPPENED:
+1. Authentication Middleware Error Handling
+   • The JWT authentication middleware (protect route) is not properly catching authentication errors
+   • When token is missing or invalid, instead of returning 401, it throws an unhandled error
+   • Global error handler catches this and returns generic 500 error
+
+2. Missing Error Handling in Middleware
+   • JWT verification failure causes exception
+   • Exception is not caught at middleware level
+   • Falls through to global error handler
+
+3. Error Handler Returns Wrong Status
+   • Global error handler treats all errors as 500
+   • Doesn't distinguish between authentication errors and server errors
+   • Generic error messages don't help identify the real issue
+
+CODE FLOW:
+Request: POST /api/events (no token)
+  ↓
+Authentication middleware checks for token
+  ↓
+Token missing → JWT verification fails
+  ↓
+Error thrown but not caught properly
+  ↓
+Global error handler catches → 500 status
+  ↓
+Generic error message returned
+
+HOW IT WAS FIXED:
+Updated authentication middleware to properly handle missing/invalid tokens:
+
+File: BEplanora/middleware/authMiddleware.js
+export const protect = async (req, res, next) => {
+  let token;
+
+  if (req.headers.authorization?.startsWith('Bearer')) {
+    try {
+      token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.admin = await Admin.findById(decoded.id).select('-password');
+      next();
+    } catch (error) {
+      // ✅ Proper error handling for invalid token
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized, token failed'
+      });
+    }
+  }
+
+  if (!token) {
+    // ✅ Proper error for missing token
+    return res.status(401).json({
+      success: false,
+      message: 'Not authorized, no token'
+    });
+  }
+};
+
+HOW TO PREVENT SIMILAR BUGS:
+1. Always return appropriate HTTP status codes (401 for auth, not 500)
+2. Test all protected endpoints without authentication
+3. Implement proper error handling in middleware
+4. Don't let authentication errors fall through to global error handler
+5. Add automated tests for unauthenticated requests
+6. Document expected status codes for all error scenarios
+
+TESTING ADDED:
+describe('Events API - Authentication', () => {
+  it('should return 401 when creating event without token', async () => {
+    const res = await request(app)
+      .post('/api/events')
+      .send({
+        title: "Test Event",
+        description: "Test",
+        date: "2025-12-01"
+      });
+    
+    expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toContain('Not authorized');
+  });
+});
+
+===========================================

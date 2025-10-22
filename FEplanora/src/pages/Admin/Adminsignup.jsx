@@ -31,6 +31,26 @@ export default function AdminSignup() {
       setError("All fields are required.");
       return;
     }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    
+    // Password strength validation
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+    
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/;
+    if (!passwordRegex.test(password)) {
+      setError("Password must contain uppercase, lowercase, number, and special character (@$!%*?&).");
+      return;
+    }
+    
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -38,7 +58,9 @@ export default function AdminSignup() {
 
     try {
       // Send request to backend
-      await API.post("/admin/signup", { firstName, lastName, email, password });
+      const response = await API.post("/admin/signup", { firstName, lastName, email, password });
+      
+      console.log("Signup response:", response);
 
       // Success alert
       alert(`Welcome to PlanOra, ${firstName}! Please login to continue.`);
@@ -55,7 +77,16 @@ export default function AdminSignup() {
       // Redirect to admin login page
       navigate("/admin/login");
     } catch (err) {
-      setError(err.response?.data.message || "Signup failed");
+      console.error("Signup error:", err);
+      console.error("Error response:", err.response);
+      
+      // Handle validation errors
+      if (err.response?.data?.errors) {
+        const errorMessages = err.response.data.errors.map(e => e.msg).join(', ');
+        setError(errorMessages);
+      } else {
+        setError(err.response?.data?.message || "Signup failed. Please try again.");
+      }
     }
   };
 
@@ -114,6 +145,9 @@ export default function AdminSignup() {
                 className={styles.input}
                 placeholder="Enter password"
               />
+              <small style={{ color: '#666', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                Must be at least 8 characters with uppercase, lowercase, number, and special character
+              </small>
             </div>
 
             <div className={styles.formGroup}>
