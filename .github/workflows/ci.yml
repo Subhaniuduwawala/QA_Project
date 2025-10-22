@@ -37,13 +37,22 @@ jobs:
         working-directory: BEplanora
         run: npm ci
 
+      - name: Create backend .env file
+        working-directory: BEplanora
+        run: |
+          echo "PORT=5000" > .env
+          echo "MONGODB_URI=mongodb://127.0.0.1:27017/planora_test" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET || 'test-jwt-secret-key' }}" >> .env
+          echo "TEST_ADMIN_FIRSTNAME=John" >> .env
+          echo "TEST_ADMIN_LASTNAME=Doe" >> .env
+          echo "TEST_ADMIN_EMAIL=john.doe@example.com" >> .env
+          echo "TEST_ADMIN_PASSWORD=Password123!" >> .env
+
       # Frontend setup
       - name: Install frontend dependencies
         working-directory: FEplanora
-        run: |
-          rm -rf node_modules package-lock.json || true
-          npm install --legacy-peer-deps
-          npm rebuild || true
+        run: npm ci --omit=optional
+        continue-on-error: false
 
       - name: Build frontend
         working-directory: FEplanora
